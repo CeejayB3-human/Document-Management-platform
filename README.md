@@ -21,10 +21,10 @@ flowchart TB
             lambda["AWS Lambda<br/>document-management<br/>(Python + PyMySQL layer)"]
             s3ep["S3 gateway endpoint"]
             smep["Secrets Manager<br/>interface endpoint"]
-            rds[("Amazon RDS for MySQL<br/>clearpath-document-db<br/>Multi-AZ, private")]
+            rds[("Amazon RDS for MySQL<br/>Client-document-db<br/>Multi-AZ, private")]
         end
 
-        secrets["AWS Secrets Manager<br/>clearpath-rds-secret"]
+        secrets["AWS Secrets Manager<br/>Client-rds-secret"]
         backup["AWS Backup<br/>daily plan"]
         cw["Amazon CloudWatch<br/>logs and alarms"]
     end
@@ -62,11 +62,11 @@ The same function can also return a time-limited pre-signed download URL and lis
 | S3 Lifecycle | `archive-to-glacier-flexible-retrieval` | Move objects to Glacier Flexible Retrieval after 30 days |
 | AWS Lambda | `document-management` | Event-driven metadata capture, pre-signed URLs |
 | Lambda layer | `client-pymysql` | PyMySQL client library |
-| Amazon RDS for MySQL | `clearpath-document-db` / `document_management_db` | Searchable metadata repository (Multi-AZ, private) |
-| AWS Secrets Manager | `clearpath-rds-secret` | Database credentials |
+| Amazon RDS for MySQL | `Client-document-db` / `document_management_db` | Searchable metadata repository (Multi-AZ, private) |
+| AWS Secrets Manager | `Client-rds-secret` | Database credentials |
 | Amazon VPC | `client-vpc` + 2 private subnets | Network isolation for Lambda and RDS |
 | VPC endpoints | Secrets Manager (interface), S3 (gateway) | Private access to AWS APIs without a NAT gateway |
-| Security groups | `ClearPath-RDS-SG` and two others | Least-privilege network rules (see below) |
+| Security groups | `Client-RDS-SG` and two others | Least-privilege network rules (see below) |
 | AWS IAM | `document-management-lambda-role` | Lambda execution role |
 | AWS Backup | `client-backup-vault`, daily plan | Scheduled RDS backups, 30-day retention |
 | Amazon CloudWatch | Log group + 4 alarms + SNS topic | Logging, monitoring, alerting |
@@ -80,12 +80,12 @@ The same function can also return a time-limited pre-signed download URL and lis
 | S3 lifecycle | Transition after 30 days to Glacier Flexible Retrieval |
 | Lambda function | `document-management` (Python, PyMySQL layer) |
 | Lambda IAM role | `document-management-lambda-role` |
-| RDS identifier | `clearpath-document-db` |
+| RDS identifier | `Client-document-db` |
 | Database name | `document_management_db` |
 | DB username | `admin` |
 | RDS instance / storage | `db.t3.micro`, 20 GB gp3, Multi-AZ, private, port 3306 |
-| RDS security group | `ClearPath-RDS-SG` |
-| Secret | `clearpath-rds-secret` |
+| RDS security group | `Client-RDS-SG` |
+| Secret | `Client-rds-secret` |
 
 Names for the remaining resources (VPC, subnets, the Lambda and endpoint security groups, backup vault/role, SNS topics) are derived from the `project_name` variable and may differ from what you see in the console. Every name above is a variable, so you can change any of them.
 
@@ -257,7 +257,7 @@ If the resources already exist in your account, applying this configuration as-i
 ```bash
 cd terraform
 terraform import aws_s3_bucket.documents client-document-management
-terraform import aws_db_instance.metadata clearpath-document-db
+terraform import aws_db_instance.metadata Client-document-db
 terraform import aws_lambda_function.document_management document-management
 terraform import aws_iam_role.lambda document-management-lambda-role
 terraform import aws_secretsmanager_secret.db_credentials <secret-arn>
