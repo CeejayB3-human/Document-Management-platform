@@ -15,7 +15,7 @@ flowchart TB
     client(["Client application<br/>(upload / download)"])
 
     subgraph aws["AWS Cloud - us-east-1"]
-        s3[("Amazon S3<br/>cleatpath-document-management<br/>S3 Standard")]
+        s3[("Amazon S3<br/>client-document-management<br/>S3 Standard")]
         glacier[("S3 Glacier Flexible Retrieval<br/>archived after 30 days")]
 
         subgraph vpc["Amazon VPC - private subnets in two Availability Zones"]
@@ -59,17 +59,17 @@ The same function can also return a time-limited pre-signed download URL and lis
 
 | Service | Resource | Purpose |
 |---|---|---|
-| Amazon S3 | `cleatpath-document-management` | Document storage, versioned and encrypted |
+| Amazon S3 | `client-document-management` | Document storage, versioned and encrypted |
 | S3 Lifecycle | `archive-to-glacier-flexible-retrieval` | Move objects to Glacier Flexible Retrieval after 30 days |
 | AWS Lambda | `document-management` | Event-driven metadata capture, pre-signed URLs |
-| Lambda layer | `cleatpath-pymysql` | PyMySQL client library |
+| Lambda layer | `client-pymysql` | PyMySQL client library |
 | Amazon RDS for MySQL | `clearpath-document-db` / `document_management_db` | Searchable metadata repository (Multi-AZ, private) |
 | AWS Secrets Manager | `clearpath-rds-secret` | Database credentials |
-| Amazon VPC | `cleatpath-vpc` + 2 private subnets | Network isolation for Lambda and RDS |
+| Amazon VPC | `client-vpc` + 2 private subnets | Network isolation for Lambda and RDS |
 | VPC endpoints | Secrets Manager (interface), S3 (gateway) | Private access to AWS APIs without a NAT gateway |
 | Security groups | `ClearPath-RDS-SG` and two others | Least-privilege network rules (see below) |
 | AWS IAM | `document-management-lambda-role` | Lambda execution role |
-| AWS Backup | `cleatpath-backup-vault`, daily plan | Scheduled RDS backups, 30-day retention |
+| AWS Backup | `client-backup-vault`, daily plan | Scheduled RDS backups, 30-day retention |
 | Amazon CloudWatch | Log group + 4 alarms + SNS topic | Logging, monitoring, alerting |
 
 ### Confirmed resource names
@@ -77,7 +77,7 @@ The same function can also return a time-limited pre-signed download URL and lis
 | Setting | Value |
 |---|---|
 | Region | `us-east-1` |
-| S3 bucket | `cleatpath-document-management` |
+| S3 bucket | `client-document-management` |
 | S3 lifecycle | Transition after 30 days to Glacier Flexible Retrieval |
 | Lambda function | `document-management` (Python, PyMySQL layer) |
 | Lambda IAM role | `document-management-lambda-role` |
@@ -154,7 +154,7 @@ cp terraform.tfvars.example terraform.tfvars
 # edit terraform.tfvars (for example, set alert_email)
 ```
 
-S3 bucket names are global. If `cleatpath-document-management` is already taken, set a different `document_bucket_name`.
+S3 bucket names are global. If `client-document-management` is already taken, set a different `document_bucket_name`.
 
 **4. Initialise, review, and apply.**
 
@@ -181,7 +181,7 @@ Terraform state contains the generated database password. Do not commit it. For 
 **Upload a document** (this triggers the whole flow):
 
 ```bash
-aws s3 cp ./sample.pdf s3://cleatpath-document-management/sample.pdf
+aws s3 cp ./sample.pdf s3://client-document-management/sample.pdf
 ```
 
 **Check the function ran** (look for "Stored metadata for 1 object(s)"):
@@ -214,7 +214,7 @@ Objects older than 30 days are stored in **S3 Glacier Flexible Retrieval**, whic
 
 ```bash
 aws s3api restore-object \
-  --bucket cleatpath-document-management \
+  --bucket client-document-management \
   --key sample.pdf \
   --restore-request '{"Days":7,"GlacierJobParameters":{"Tier":"Standard"}}'
 ```
@@ -257,7 +257,7 @@ If the resources already exist in your account, applying this configuration as-i
 
 ```bash
 cd terraform
-terraform import aws_s3_bucket.documents cleatpath-document-management
+terraform import aws_s3_bucket.documents client-document-management
 terraform import aws_db_instance.metadata clearpath-document-db
 terraform import aws_lambda_function.document_management document-management
 terraform import aws_iam_role.lambda document-management-lambda-role
