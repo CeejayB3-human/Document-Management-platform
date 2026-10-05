@@ -4,7 +4,6 @@ A serverless AWS platform that stores business and client documents in Amazon S3
 
 This repository contains the complete Infrastructure as Code (Terraform), the Lambda function, and the build tooling needed to reproduce the environment.
 
-> **About this repository.** The reference environment was first built by hand in the AWS Console. The Terraform in this repo is a codified definition of that same architecture, so it can be reviewed, version-controlled, and redeployed consistently. See [Adopting the existing console-built environment](#adopting-the-existing-console-built-environment) if you want Terraform to manage the resources that already exist.
 
 ---
 
