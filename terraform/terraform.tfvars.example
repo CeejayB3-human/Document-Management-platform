@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars and adjust. terraform.tfvars is git-ignored.
+# Every variable has a default matching the reference deployment, so this
+# file is optional.
+
+aws_region = "us-east-1"
+
+# Receives CloudWatch alarm and AWS Backup notifications. Leave "" to skip.
+alert_email = ""
+
+# S3 bucket names are global. Change this if the name is already taken.
+document_bucket_name = "cleatpath-document-management"
